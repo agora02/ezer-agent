@@ -19,14 +19,15 @@ app = FastAPI(title="Ezer Studio (AE Agent Control Center)")
 class SettingsUpdate(BaseModel):
     gemini_api_key: str = ""
     discord_bot_token: str = ""
+    telegram_bot_token: str = ""
     notion_api_key: str = ""
     notion_default_page_id: str = ""
     email_user: str = ""
     email_pass: str = ""
 
 class MemoryUpdate(BaseModel):
-    user_name: str = "최지원"
-    primary_church_app: str = ""
+    user_name: str = "User"
+    primary_project: str = "Default Project"
     custom_facts: List[str] = []
 
 class TestChatRequest(BaseModel):
@@ -37,10 +38,10 @@ def get_status():
     from tools.system_tools import get_system_status
     sys_status = get_system_status()
     
-    # Check env presence
     env_keys = {
         "has_gemini": bool(os.getenv("GEMINI_API_KEY")),
         "has_discord": bool(os.getenv("DISCORD_BOT_TOKEN")),
+        "has_telegram": bool(os.getenv("TELEGRAM_BOT_TOKEN")),
         "has_notion": bool(os.getenv("NOTION_API_KEY")),
         "has_email": bool(os.getenv("EMAIL_USER") and os.getenv("EMAIL_PASS")),
     }
@@ -48,7 +49,7 @@ def get_status():
         "system": sys_status,
         "env_status": env_keys,
         "engine": "Google Gemini 3.6 Flash / Pro Hybrid",
-        "agent_name": "AE (Autonomous Executive)"
+        "agent_name": "Ezer Agent (Autonomous AI OS)"
     }
 
 @app.get("/api/settings")
@@ -57,6 +58,7 @@ def get_settings():
     return {
         "gemini_api_key": os.getenv("GEMINI_API_KEY", ""),
         "discord_bot_token": os.getenv("DISCORD_BOT_TOKEN", ""),
+        "telegram_bot_token": os.getenv("TELEGRAM_BOT_TOKEN", ""),
         "notion_api_key": os.getenv("NOTION_API_KEY", ""),
         "notion_default_page_id": os.getenv("NOTION_DEFAULT_PAGE_ID", ""),
         "email_user": os.getenv("EMAIL_USER", ""),
@@ -67,6 +69,7 @@ def get_settings():
 def save_settings(settings: SettingsUpdate):
     env_content = f"""USE_OLLAMA=false
 DISCORD_BOT_TOKEN={settings.discord_bot_token}
+TELEGRAM_BOT_TOKEN={settings.telegram_bot_token}
 GEMINI_API_KEY={settings.gemini_api_key}
 
 # Gmail IMAP Settings
@@ -78,7 +81,6 @@ EMAIL_PASS={settings.email_pass}
 # Notion Integration Settings
 NOTION_API_KEY={settings.notion_api_key}
 NOTION_DEFAULT_PAGE_ID={settings.notion_default_page_id}
-"""
     ENV_FILE.write_text(env_content, encoding="utf-8")
     load_dotenv(ENV_FILE, override=True)
     return {"status": "success", "message": "환경 설정이 성공적으로 저장되었습니다."}

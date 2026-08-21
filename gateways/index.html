@@ -402,18 +402,22 @@
           </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
           <div>
             <label class="text-app-textMuted block mb-1">Google Gemini API Key</label>
-            <input type="text" id="cfg-gemini-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none">
+            <input type="text" id="cfg-gemini-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="AQ.Ab8RN...">
           </div>
           <div>
             <label class="text-app-textMuted block mb-1">Discord Bot Token</label>
-            <input type="text" id="cfg-discord-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none">
+            <input type="text" id="cfg-discord-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="MTUz...">
           </div>
           <div>
-            <label class="text-app-textMuted block mb-1">Notion Integration Token</label>
-            <input type="text" id="cfg-notion-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none">
+            <label class="text-app-textMuted block mb-1">Telegram Bot Token</label>
+            <input type="text" id="cfg-telegram-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="123456:ABC-DEF...">
+          </div>
+          <div>
+            <label class="text-app-textMuted block mb-1">Notion API Token</label>
+            <input type="text" id="cfg-notion-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="ntn_...">
           </div>
         </div>
       </div>
@@ -669,6 +673,7 @@
       const d = await res.json();
       document.getElementById('cfg-gemini-input').value = d.gemini_api_key || '';
       document.getElementById('cfg-discord-input').value = d.discord_bot_token || '';
+      document.getElementById('cfg-telegram-input').value = d.telegram_bot_token || '';
       document.getElementById('cfg-notion-input').value = d.notion_api_key || '';
     }
 
@@ -676,6 +681,7 @@
       const payload = {
         gemini_api_key: document.getElementById('cfg-gemini-input').value,
         discord_bot_token: document.getElementById('cfg-discord-input').value,
+        telegram_bot_token: document.getElementById('cfg-telegram-input').value,
         notion_api_key: document.getElementById('cfg-notion-input').value
       };
       await fetch('/api/settings', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)});

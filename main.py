@@ -1,33 +1,38 @@
 import sys
 import argparse
-from core.mlx_engine import MLXAEAgent
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
 
 def main():
-    parser = argparse.ArgumentParser(description="Apple MLX Native AE Personal Assistant")
+    parser = argparse.ArgumentParser(description="Ezer Agent - Autonomous Ministry & Project AI OS")
+    parser.add_argument("--web", action="store_true", help="Launch Ezer Studio Web Control Center (OpenClaw UI)")
     parser.add_argument("--discord", action="store_true", help="Launch Discord Bot Gateway")
+    parser.add_argument("--telegram", action="store_true", help="Launch Telegram Bot Gateway")
+    parser.add_argument("--port", type=int, default=8888, help="Port for Web UI (default: 8888)")
     args = parser.parse_args()
 
-    if args.discord:
+    if args.web:
+        import uvicorn
+        print(f"🖥️ [Ezer Studio] Starting Web UI on http://localhost:{args.port} ...")
+        uvicorn.run("gateways.web_ui:app", host="0.0.0.0", port=args.port, reload=False)
+    elif args.discord:
         from gateways.discord_bot import start_discord_bot
-        print("🤖 [AE MLX] Starting Discord Bot Gateway (Apple Metal GPU Accelerated)...")
+        print("🤖 [Ezer Agent] Starting Discord Bot Gateway...")
         start_discord_bot()
+    elif args.telegram:
+        from gateways.telegram_bot import TelegramGateway
+        print("📱 [Ezer Agent] Starting Telegram Bot Gateway...")
+        gw = TelegramGateway()
+        gw.run()
     else:
-        print("🤖 [AE MLX] Interactive Terminal Chat Mode (Apple Metal GPU Accelerated)")
-        agent = MLXAEAgent()
-        print("AE (Apple MLX Engine) is ready! (type 'exit' or 'quit' to stop)\n")
-        while True:
-            try:
-                user_input = input("User > ").strip()
-                if user_input.lower() in ["exit", "quit"]:
-                    print("Goodbye!")
-                    break
-                if not user_input:
-                    continue
-                reply = agent.chat(user_input)
-                print(f"AE > {reply}\n")
-            except KeyboardInterrupt:
-                print("\nSession ended.")
-                break
+        # Default: Launch Ezer Studio Web Control Center
+        import uvicorn
+        print(f"🖥️ [Ezer Studio] Starting Default Web UI on http://localhost:{args.port} ...")
+        uvicorn.run("gateways.web_ui:app", host="0.0.0.0", port=args.port, reload=False)
 
 if __name__ == "__main__":
     main()
