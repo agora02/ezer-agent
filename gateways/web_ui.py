@@ -33,6 +33,11 @@ class MemoryUpdate(BaseModel):
 class TestChatRequest(BaseModel):
     message: str
 
+@app.get("/health")
+@app.get("/healthz")
+def health_check():
+    return {"status": "healthy", "service": "ezer-agent"}
+
 @app.get("/api/status")
 def get_status():
     from tools.system_tools import get_system_status
