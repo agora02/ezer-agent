@@ -2,10 +2,11 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, Any, List, Callable
-from tools.browser_tools import get_realtime_weather, search_web_duckduckgo
-from tools.mac_control_tools import find_mac_files, organize_mac_folder, open_mac_app, read_mac_file_summary, delete_mac_file
-from tools.email_tools import fetch_recent_emails, delete_spam_only_emails
-from tools.system_tools import get_system_status
+
+# ============================================================
+# ALL tool imports are LAZY (inside dispatch function) to avoid
+# crashing on Linux/Docker where macOS commands don't exist.
+# ============================================================
 
 # Core Built-in Capabilities (Always built into Ezer Agent by default)
 DEFAULT_CORE_TOOLS = [
@@ -145,39 +146,49 @@ DEFAULT_CORE_TOOLS = [
 TOOLS_SCHEMA = list(DEFAULT_CORE_TOOLS)
 
 def dispatch_tool_call(tool_name: str, arguments: Dict[str, Any]) -> str:
-    """Dispatches and executes the requested built-in capability."""
+    """Dispatches and executes the requested built-in capability.
+    All imports are lazy to ensure Cloud Run (Linux) doesn't crash on macOS-only modules.
+    """
     try:
         if tool_name == "get_korea_weather":
+            from tools.browser_tools import get_realtime_weather
             query = arguments.get("query", "서울")
             return get_realtime_weather(query)
 
         elif tool_name == "find_mac_files":
+            from tools.mac_control_tools import find_mac_files
             kw = arguments.get("keyword", "")
             target_dir = arguments.get("target_dir", "~")
             return find_mac_files(keyword=kw, target_dir=target_dir)
 
         elif tool_name == "delete_mac_file":
+            from tools.mac_control_tools import delete_mac_file
             kw = arguments.get("keyword", "")
             target_dir = arguments.get("target_dir", "~/Desktop")
             return delete_mac_file(keyword=kw, target_dir=target_dir)
 
         elif tool_name == "organize_mac_folder":
+            from tools.mac_control_tools import organize_mac_folder
             folder = arguments.get("folder_path", "~/Downloads")
             return organize_mac_folder(folder_path=folder)
 
         elif tool_name == "read_mac_file":
+            from tools.mac_control_tools import read_mac_file_summary
             path = arguments.get("file_path", "")
             return read_mac_file_summary(file_path=path)
 
         elif tool_name == "open_mac_app":
+            from tools.mac_control_tools import open_mac_app
             app = arguments.get("app_name", "Finder")
             return open_mac_app(app_name=app)
 
         elif tool_name == "search_web":
+            from tools.browser_tools import search_web_duckduckgo
             query = arguments.get("query", "")
             return search_web_duckduckgo(query=query)
 
         elif tool_name == "manage_emails":
+            from tools.email_tools import fetch_recent_emails, delete_spam_only_emails
             action = arguments.get("action", "fetch")
             tab = arguments.get("tab", "primary")
             if action == "delete_spam":
@@ -186,6 +197,7 @@ def dispatch_tool_call(tool_name: str, arguments: Dict[str, Any]) -> str:
                 return fetch_recent_emails(max_count=10, tab=tab)
 
         elif tool_name == "get_system_status":
+            from tools.system_tools import get_system_status
             return get_system_status()
 
         elif tool_name == "install_new_skill":

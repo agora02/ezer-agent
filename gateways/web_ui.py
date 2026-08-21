@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Dict, Any, List
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -14,7 +13,7 @@ MEMORY_FILE = BASE_DIR / "data" / "long_term_memory.json"
 
 load_dotenv(ENV_FILE)
 
-app = FastAPI(title="Ezer Studio (AE Agent Control Center)")
+app = FastAPI(title="Ezer Agent (AE Agent Control Center)")
 
 class SettingsUpdate(BaseModel):
     gemini_api_key: str = ""
@@ -40,9 +39,12 @@ def health_check():
 
 @app.get("/api/status")
 def get_status():
-    from tools.system_tools import get_system_status
-    sys_status = get_system_status()
-    
+    try:
+        from tools.system_tools import get_system_status
+        sys_status = get_system_status()
+    except Exception:
+        sys_status = "System status unavailable"
+
     env_keys = {
         "has_gemini": bool(os.getenv("GEMINI_API_KEY")),
         "has_discord": bool(os.getenv("DISCORD_BOT_TOKEN")),
@@ -86,6 +88,7 @@ EMAIL_PASS={settings.email_pass}
 # Notion Integration Settings
 NOTION_API_KEY={settings.notion_api_key}
 NOTION_DEFAULT_PAGE_ID={settings.notion_default_page_id}
+"""
     ENV_FILE.write_text(env_content, encoding="utf-8")
     load_dotenv(ENV_FILE, override=True)
     return {"status": "success", "message": "환경 설정이 성공적으로 저장되었습니다."}
@@ -97,13 +100,13 @@ def get_memory():
             return json.loads(MEMORY_FILE.read_text(encoding="utf-8"))
         except Exception:
             pass
-    return {"user_name": "최지원", "primary_church_app": "", "custom_facts": []}
+    return {"user_name": "User", "primary_project": "", "custom_facts": []}
 
 @app.post("/api/memory")
 def save_memory(mem: MemoryUpdate):
     data = {
         "user_name": mem.user_name,
-        "primary_church_app": mem.primary_church_app,
+        "primary_project": mem.primary_project,
         "custom_facts": mem.custom_facts
     }
     MEMORY_FILE.parent.mkdir(exist_ok=True)

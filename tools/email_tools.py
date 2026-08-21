@@ -4,9 +4,10 @@ import imaplib
 import email
 from email.header import decode_header
 from typing import Dict, Any, List
+from pathlib import Path
 from dotenv import load_dotenv
-from config import ENV_PATH
 
+ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=ENV_PATH)
 
 PROTECTED_KEYWORDS = [
