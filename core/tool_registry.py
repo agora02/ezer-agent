@@ -277,10 +277,35 @@ def dispatch_tool_call(tool_name: str, arguments: Dict[str, Any]) -> str:
             content = arguments.get("content", "")
             return append_to_notion_page(page_id=page_id, content=content)
 
-        elif tool_name == "get_system_status":
-            return get_system_status()
+        elif tool_name == "install_new_skill":
+            from core.skill_learner import skill_learner
+            s_name = arguments.get("skill_name", "")
+            s_code = arguments.get("python_code", "")
+            s_desc = arguments.get("description", "")
+            s_params = arguments.get("parameters", {})
+            return skill_learner.generate_and_install_skill(s_name, s_code, s_desc, s_params)
+
+        elif tool_name == "record_learning_insight":
+            from core.skill_learner import skill_learner
+            insight = arguments.get("insight", "")
+            session_id = arguments.get("session_id", "default")
+            skill_learner.record_learning_experience(session_id, insight)
+            return f"✅ 자율 학습된 지식/교훈이 장기 기억에 영구 반영되었습니다: {insight}"
 
         else:
+            # Check dynamic custom skills directory
+            custom_skill_file = Path(__file__).resolve().parent.parent / "tools" / "custom_skills" / f"{tool_name}.py"
+            if custom_skill_file.exists():
+                import importlib.util
+                spec = importlib.util.spec_from_file_location(tool_name, str(custom_skill_file))
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                if hasattr(module, "run"):
+                    return module.run(**arguments)
+                elif hasattr(module, "main"):
+                    return module.main(**arguments)
+                return f"✅ 스킬 `{tool_name}` 실행 완료"
+
             return f"[ERROR] 알 수 없는 도구 이름입니다: '{tool_name}'"
 
     except Exception as e:

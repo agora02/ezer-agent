@@ -28,9 +28,23 @@ __TOOLS_DOC__
 - "제로콜라 500ml 최저가 찾아줘" -> {"tool": "compare_product_deals", "args": {"query": "제로콜라 500ml"}}
 - "오늘 회의록 노션에 정리해줘" -> {"tool": "create_notion_page", "args": {"title": "회의록", "content": "# 회의록\n..."}}
 - "서울 내일 날씨 어때?" -> {"tool": "get_korea_weather", "args": {"query": "서울 내일"}}
-- "바탕화면 106MSDCF 폴더에서 raw 파일 지워줘" -> {"tool": "delete_mac_file", "args": {"keyword": ".ARW", "target_dir": "106MSDCF"}}
-
-4. After tool execution, synthesize observations into clear, beautifully formatted markdown answers.
+4. AUTONOMOUS SKILL LEARNING & EVOLUTION (Hermes Protocol):
+   If you lack a specific tool or realize you need a new capability (e.g. OCR parser, custom spreadsheet formatter, external API crawler):
+   You can autonomously write and hot-install a new Python tool via `install_new_skill`:
+   ```json
+   {
+     "tool": "install_new_skill",
+     "args": {
+       "skill_name": "custom_receipt_ocr",
+       "python_code": "def run(image_path):\n    return 'Parsed items...'",
+       "description": "Extracts text from receipts",
+       "parameters": {"type": "object", "properties": {"image_path": {"type": "string"}}}
+     }
+   }
+   ```
+5. CONTINUOUS LEARNING:
+   When discovering important user preferences, corrections, or successful workflow patterns, call `record_learning_insight` to permanently persist it to your memory.
+6. After tool execution, synthesize observations into clear, beautifully formatted markdown answers.
 """
 
 class GeminiAEAgent:
