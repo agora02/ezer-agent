@@ -1,10 +1,11 @@
 #!/bin/bash
-# Script to create a standalone native macOS App for Ezer Studio
+# Self-Bootstrapping Installer for Ezer Studio Native macOS App
 
 APP_NAME="Ezer Studio"
 BUILD_DIR="$HOME/Desktop/${APP_NAME}.app"
+CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "🔨 Building Native macOS App wrapper for ${APP_NAME}..."
+echo "🔨 Building Self-Installing Standalone macOS App (${APP_NAME})..."
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR/Contents/MacOS"
@@ -34,18 +35,31 @@ cat << 'EOF' > "$BUILD_DIR/Contents/Info.plist"
 </plist>
 EOF
 
-# 2. Executable launcher script
-cat << 'EOF' > "$BUILD_DIR/Contents/MacOS/launch"
+# 2. Executable launcher script (Auto setup venv & dependencies on first run)
+cat << EOF > "$BUILD_DIR/Contents/MacOS/launch"
 #!/bin/bash
+TARGET_DIR="${CURRENT_DIR}"
 
-# Ensure backend server is running
+cd "\$TARGET_DIR"
+
+# Auto setup venv & install dependencies if not installed
+if [ ! -d "\$TARGET_DIR/venv" ]; then
+    python3 -m venv "\$TARGET_DIR/venv"
+    source "\$TARGET_DIR/venv/bin/activate"
+    pip install -r "\$TARGET_DIR/requirements.txt"
+fi
+
+if [ ! -f "\$TARGET_DIR/.env" ]; then
+    cp "\$TARGET_DIR/.env.example" "\$TARGET_DIR/.env"
+fi
+
+# Ensure backend server is running on 8888
 if ! lsof -i:8888 > /dev/null 2>&1; then
-    cd /Users/jeewonchoi/Documents/antigravity/mlx_agent
-    /Users/jeewonchoi/Documents/antigravity/mlx_agent/venv/bin/python -m uvicorn gateways.web_ui:app --host 0.0.0.0 --port 8888 > /dev/null 2>&1 &
+    "\$TARGET_DIR/venv/bin/python" -m uvicorn gateways.web_ui:app --host 0.0.0.0 --port 8888 > /dev/null 2>&1 &
     sleep 1.5
 fi
 
-# Launch in dedicated Chrome App Window or Safari
+# Open Dedicated Standalone Window
 if [ -d "/Applications/Google Chrome.app" ]; then
     open -na "Google Chrome" --args --app="http://localhost:8888"
 elif [ -d "/Applications/Brave Browser.app" ]; then
@@ -57,4 +71,4 @@ EOF
 
 chmod +x "$BUILD_DIR/Contents/MacOS/launch"
 
-echo "✅ [Ezer Studio.app] successfully created on your Desktop!"
+echo "✅ [Ezer Studio.app] self-installing macOS package built on Desktop!"

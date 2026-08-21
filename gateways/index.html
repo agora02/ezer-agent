@@ -399,15 +399,20 @@
   </div>
 
   <script>
-    let sessions = [
-      { id: 'main', name: 'Main Session', badge: 'Live', isPinned: true },
-      { id: 'notion', name: 'Project Tov 노션 사역', badge: 'Notion', isPinned: false },
-      { id: 'finance', name: '예랑 회계 & 후원금 관리', badge: 'Finance', isPinned: false }
-    ];
-    let currentSession = 'main';
+    // Pure clean initial session state (Load from localStorage if exists, otherwise blank new session)
+    let sessions = JSON.parse(localStorage.getItem("ezer_sessions") || "[]");
+    if (sessions.length === 0) {
+      sessions = [{ id: 'sess_default', name: '새 세션', badge: 'Live', isPinned: true }];
+    }
+    let currentSession = sessions[0].id;
     let targetContextSessionId = null;
 
+    function saveSessionsToStorage() {
+      localStorage.setItem("ezer_sessions", JSON.stringify(sessions));
+    }
+
     function renderSessions() {
+      saveSessionsToStorage();
       const container = document.getElementById('session-list');
       container.innerHTML = sessions.map(s => `
         <div class="group relative flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
