@@ -16,11 +16,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files
+# Copy all application files
 COPY . .
 
-# Cloud Run injects $PORT (usually 8080)
+# Ensure entrypoint is executable
+RUN chmod +x entrypoint.sh
+
+# Expose port
 EXPOSE 8080
 
-# Run FastAPI app dynamically binding to Cloud Run $PORT
-CMD uvicorn gateways.web_ui:app --host 0.0.0.0 --port ${PORT:-8080}
+CMD ["./entrypoint.sh"]
