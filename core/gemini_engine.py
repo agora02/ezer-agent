@@ -25,6 +25,8 @@ You are powered by Google Gemini intelligence and possess direct control over fi
 __TOOLS_DOC__
 
 ### EXAMPLES:
+- "오늘 회의록 노션에 정리해서 올려줘" -> {"tool": "create_notion_page", "args": {"title": "오늘 회의록", "content": "# 회의록\n- 주요 안건..."}}
+- "노션에서 2026 기획서 찾아줘" -> {"tool": "search_notion_pages", "args": {"query": "2026 기획서"}}
 - "오늘 서버비 45000원 지출 기록해줘" -> {"tool": "record_transaction", "args": {"description": "서버비", "amount": 45000, "category": "서버/인프라", "t_type": "expense"}}
 - "이번달 손익계산서(P&L) 뽑아줘" -> {"tool": "generate_profit_and_loss", "args": {}}
 - "현재 잔고가 2천만원인데 런웨이랑 번레이트 얼마야?" -> {"tool": "calculate_burn_rate_and_runway", "args": {"current_cash_balance": 20000000}}

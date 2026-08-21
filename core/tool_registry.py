@@ -141,6 +141,43 @@ DEFAULT_CORE_TOOLS = [
             "properties": {}
         }
     },
+    # Notion Workspace Core Tools
+    {
+        "name": "create_notion_page",
+        "description": "[노션] 노션 워크스페이스에 새로운 회의록, 기획서, 메모 또는 문서를 생성합니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string", "description": "페이지 제목"},
+                "content": {"type": "string", "description": "작성할 본문 내용 (마크다운 및 줄바꿈 지원)"},
+                "parent_page_id": {"type": "string", "description": "상위 페이지 ID (생략 시 기본 페이지에 생성)"}
+            },
+            "required": ["title", "content"]
+        }
+    },
+    {
+        "name": "search_notion_pages",
+        "description": "[노션] 노션 내에서 특정 키워드가 포함된 페이지나 데이터베이스를 검색합니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "검색할 키워드"}
+            },
+            "required": ["query"]
+        }
+    },
+    {
+        "name": "append_to_notion_page",
+        "description": "[노션] 기존 노션 페이지의 맨 아래에 추가 메모나 텍스트 블록을 덧붙입니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "page_id": {"type": "string", "description": "대상 노션 페이지 ID"},
+                "content": {"type": "string", "description": "추가할 내용"}
+            },
+            "required": ["page_id", "content"]
+        }
+    },
     # OpenAccountant Financial & Accounting Core Tools
     {
         "name": "record_transaction",
@@ -250,6 +287,26 @@ def dispatch_tool_call(tool_name: str, arguments: Dict[str, Any]) -> str:
         elif tool_name == "get_system_status":
             from tools.system_tools import get_system_status
             return get_system_status()
+
+        # Notion Tool Handlers
+        elif tool_name == "create_notion_page":
+            from tools.notion_tools import create_notion_page
+            return create_notion_page(
+                title=arguments.get("title", "제목 없음"),
+                content=arguments.get("content", ""),
+                parent_page_id=arguments.get("parent_page_id")
+            )
+
+        elif tool_name == "search_notion_pages":
+            from tools.notion_tools import search_notion_pages
+            return search_notion_pages(query=arguments.get("query", ""))
+
+        elif tool_name == "append_to_notion_page":
+            from tools.notion_tools import append_to_notion_page
+            return append_to_notion_page(
+                page_id=arguments.get("page_id", ""),
+                content=arguments.get("content", "")
+            )
 
         # OpenAccountant Tool Handlers
         elif tool_name == "record_transaction":
