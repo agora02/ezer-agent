@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Environment secrets (CRITICAL: Do NOT upload API keys)
+.env
+data/long_term_memory.json
+
+# Logs & Cache
+*.log
+.cache/
+.DS_Store
+.vscode/
+.idea/
