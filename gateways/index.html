@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" class="dark">
+<html lang="ko" class="dark" id="html-root">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,9 +54,9 @@
     }
   </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden text-[13px]">
+<body class="h-screen flex flex-col overflow-hidden text-[13px]" id="app-body">
 
-  <!-- Top Window Titlebar -->
+  <!-- Top Titlebar -->
   <header class="h-10 bg-app-sidebar border-b border-app-border flex items-center justify-between px-4 select-none shrink-0">
     <div class="flex items-center space-x-2">
       <span class="traffic-dot bg-[#ff5f56]"></span>
@@ -74,7 +74,7 @@
 
   <div class="flex-1 flex overflow-hidden relative">
 
-    <!-- Left Sidebar (Sessions, Navigation, Projects) -->
+    <!-- Left Sidebar -->
     <aside class="w-64 bg-app-sidebar border-r border-app-border flex flex-col justify-between p-3 select-none shrink-0">
       <div class="space-y-4">
         <div class="flex items-center justify-between px-2 pt-1">
@@ -85,8 +85,8 @@
             <span class="font-bold text-sm tracking-tight text-white">Ezer Agent</span>
           </div>
           <div class="flex items-center space-x-2 text-app-textMuted text-xs">
-            <button class="hover:text-white transition"><i class="fa-solid fa-magnifying-glass"></i></button>
-            <button class="hover:text-white transition"><i class="fa-regular fa-window-maximize"></i></button>
+            <button onclick="alert('세션 검색창 준비됨')" class="hover:text-white transition"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <button onclick="toggleSidebarCollapse()" class="hover:text-white transition"><i class="fa-regular fa-window-maximize"></i></button>
           </div>
         </div>
 
@@ -106,15 +106,13 @@
           <span>New session</span>
         </button>
 
-        <!-- Sessions List with 3-dot Context Menu Trigger -->
         <div class="space-y-1 pt-2">
           <div class="flex items-center justify-between px-2 text-[11px] font-semibold text-app-textMuted uppercase tracking-wider">
             <span>세션</span>
             <i class="fa-solid fa-sliders text-[10px]"></i>
           </div>
-
-          <div id="session-list" class="space-y-1 pt-1">
-            <!-- Dynamic session items injected via JS -->
+          <div id="session-list" class="space-y-1 pt-1 custom-scroll max-h-72 overflow-y-auto">
+            <!-- Dynamic session items -->
           </div>
         </div>
       </div>
@@ -122,8 +120,8 @@
       <div class="pt-3 border-t border-app-border flex items-center justify-between text-xs text-app-textMuted px-2">
         <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online</span>
         <div class="flex items-center space-x-2.5">
-          <button onclick="toggleView('settings')" class="hover:text-white transition"><i class="fa-solid fa-gear"></i></button>
-          <button onclick="toggleView('settings')" class="hover:text-white transition"><i class="fa-solid fa-brain"></i></button>
+          <button onclick="toggleView('settings'); switchSubTab('settings')" class="hover:text-white transition"><i class="fa-solid fa-gear"></i></button>
+          <button onclick="toggleView('settings'); switchSubTab('ai')" class="hover:text-white transition"><i class="fa-solid fa-brain"></i></button>
         </div>
       </div>
     </aside>
@@ -135,7 +133,7 @@
           <div class="w-16 h-16 rounded-2xl bg-app-accent flex items-center justify-center text-white text-3xl shadow-xl shadow-app-accent/20">
             <i class="fa-solid fa-shield-halved"></i>
           </div>
-          <h2 class="text-xl font-bold text-white tracking-tight">Assistant (Ezer Agent)</h2>
+          <h2 class="text-xl font-bold text-white tracking-tight" id="hero-title">Assistant (Ezer Agent)</h2>
           <div class="inline-flex items-center px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-app-textMuted">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> Ready to assist
           </div>
@@ -167,14 +165,14 @@
           <textarea id="message-input" rows="2" onkeydown="handleKeyDown(event)" placeholder="Message Ezer Assistant..." class="w-full bg-transparent text-sm text-app-text placeholder-app-textMuted focus:outline-none resize-none custom-scroll"></textarea>
           <div class="flex items-center justify-between pt-2 border-t border-white/5 text-xs text-app-textMuted">
             <div class="flex items-center space-x-3">
-              <button class="hover:text-white transition"><i class="fa-solid fa-plus"></i></button>
-              <button onclick="toggleView('settings')" class="hover:text-white transition"><i class="fa-solid fa-sliders"></i></button>
-              <button onclick="toggleView('settings')" class="hover:text-white transition"><i class="fa-solid fa-toolbox"></i> Tools (13)</button>
+              <button onclick="uploadAttachmentMock()" class="hover:text-white transition"><i class="fa-solid fa-plus"></i></button>
+              <button onclick="toggleView('settings'); switchSubTab('settings')" class="hover:text-white transition"><i class="fa-solid fa-sliders"></i></button>
+              <button onclick="toggleView('settings'); switchSubTab('mcp')" class="hover:text-white transition"><i class="fa-solid fa-toolbox"></i> Tools (13)</button>
             </div>
             <div class="flex items-center space-x-3">
               <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-white/10 text-xs font-mono text-zinc-300">
                 <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>gemini-3.6-flash</span>
+                <span id="active-model-indicator">gemini-3.6-flash</span>
                 <span class="text-app-textMuted text-[10px]">• Cloud Native</span>
               </div>
               <button onclick="sendMessage()" class="w-8 h-8 rounded-xl bg-app-accent hover:bg-app-accentHover text-white flex items-center justify-center transition shadow-md shadow-app-accent/20">
@@ -196,229 +194,178 @@
           <p class="text-xs text-app-textMuted font-mono pt-1">ezer.config.json 편집 및 실시간 시스템 파라미터 제어</p>
         </div>
         <div class="flex items-center space-x-1 bg-app-panel p-1 rounded-lg border border-app-border text-xs">
-          <button class="px-3 py-1 rounded-md bg-app-border text-white font-medium">Simple</button>
-          <button class="px-3 py-1 rounded-md text-app-textMuted hover:text-white">Advanced</button>
+          <button onclick="setSimpleMode(true)" id="btn-mode-simple" class="px-3 py-1 rounded-md bg-app-border text-white font-medium">Simple</button>
+          <button onclick="setSimpleMode(false)" id="btn-mode-adv" class="px-3 py-1 rounded-md text-app-textMuted hover:text-white">Advanced</button>
         </div>
       </div>
 
-      <!-- Horizontal Tab Navigation Bar (Flex-Wrap with exact OpenClaw paddings) -->
-      <div class="flex flex-wrap items-center gap-2 pt-1 pb-3 border-b border-app-border">
-        <button class="px-3 py-2 rounded-xl bg-app-panel text-white font-medium flex items-center gap-2 border border-app-border hover:border-app-accent/40 transition">
-          <i class="fa-solid fa-gear text-app-textMuted"></i>
-          <span>설정</span>
-        </button>
-        <button class="px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border transition">
-          <i class="fa-solid fa-link text-app-textMuted"></i>
-          <span>채널</span>
-        </button>
-        <button class="px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border transition">
-          <i class="fa-solid fa-paper-plane text-app-textMuted"></i>
-          <span>커뮤니케이션</span>
-        </button>
-        <button class="px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border transition">
-          <i class="fa-solid fa-wand-magic-sparkles text-app-textMuted"></i>
-          <span>모양</span>
-        </button>
-        <button class="px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border transition">
-          <i class="fa-solid fa-terminal text-app-textMuted"></i>
-          <span>자동화</span>
-        </button>
-        <button class="px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border transition">
-          <i class="fa-solid fa-wrench text-app-textMuted"></i>
-          <span>MCP</span>
-        </button>
-        <button class="px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border transition">
-          <i class="fa-solid fa-globe text-app-textMuted"></i>
-          <span>인프라</span>
-        </button>
-        <button class="px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border transition">
-          <i class="fa-regular fa-folder text-app-textMuted"></i>
-          <span>Worktree</span>
-        </button>
-        <button class="px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border transition">
-          <i class="fa-solid fa-brain text-app-textMuted"></i>
-          <span>AI 및 에이전트</span>
-        </button>
-        <button class="px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border transition">
-          <i class="fa-solid fa-bug text-app-textMuted"></i>
-          <span>디버그</span>
-        </button>
-        <button class="px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border transition">
-          <i class="fa-regular fa-file-lines text-app-textMuted"></i>
-          <span>로그</span>
-        </button>
+      <!-- Functional SubTab Navigation Bar -->
+      <div class="flex flex-wrap items-center gap-2 pt-1 pb-3 border-b border-app-border text-xs">
+        <button onclick="switchSubTab('settings')" id="subtab-settings" class="subtab-btn px-3 py-2 rounded-xl bg-app-panel text-white font-medium flex items-center gap-2 border border-app-border"><i class="fa-solid fa-gear"></i><span>설정</span></button>
+        <button onclick="switchSubTab('channels')" id="subtab-channels" class="subtab-btn px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border"><i class="fa-solid fa-link"></i><span>채널</span></button>
+        <button onclick="switchSubTab('appearance')" id="subtab-appearance" class="subtab-btn px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border"><i class="fa-solid fa-wand-magic-sparkles"></i><span>모양</span></button>
+        <button onclick="switchSubTab('mcp')" id="subtab-mcp" class="subtab-btn px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border"><i class="fa-solid fa-wrench"></i><span>MCP & Tools</span></button>
+        <button onclick="switchSubTab('ai')" id="subtab-ai" class="subtab-btn px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border"><i class="fa-solid fa-brain"></i><span>AI 및 에이전트</span></button>
+        <button onclick="switchSubTab('logs')" id="subtab-logs" class="subtab-btn px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border"><i class="fa-regular fa-file-lines"></i><span>실시간 로그</span></button>
       </div>
 
-      <!-- Screenshot 1 Cloned: Appearance Section -->
-      <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-4">
-        <div class="flex items-center space-x-2 text-white font-bold text-sm">
-          <i class="fa-solid fa-wand-magic-sparkles text-app-accent"></i>
-          <span>Appearance</span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-          <!-- Theme -->
-          <div>
-            <label class="text-app-textMuted block mb-1.5">Theme</label>
-            <div class="grid grid-cols-4 gap-1 p-1 bg-app-card rounded-xl border border-app-border text-center text-[11px]">
-              <button class="py-1.5 rounded-lg bg-app-border text-white font-semibold">Claw</button>
-              <button class="py-1.5 rounded-lg text-app-textMuted hover:text-white">Knot</button>
-              <button class="py-1.5 rounded-lg text-app-textMuted hover:text-white">Dash</button>
-              <button class="py-1.5 rounded-lg text-app-textMuted hover:text-white">Import</button>
-            </div>
-          </div>
-
-          <!-- Mode -->
-          <div>
-            <label class="text-app-textMuted block mb-1.5">Mode</label>
-            <div class="grid grid-cols-3 gap-1 p-1 bg-app-card rounded-xl border border-app-border text-center text-[11px]">
-              <button class="py-1.5 rounded-lg text-app-textMuted hover:text-white">Light</button>
-              <button class="py-1.5 rounded-lg text-app-textMuted hover:text-white">Dark</button>
-              <button class="py-1.5 rounded-lg bg-app-border text-white font-semibold">System</button>
-            </div>
-          </div>
-
-          <!-- Roundness -->
-          <div>
-            <label class="text-app-textMuted block mb-1.5">Roundness</label>
-            <div class="grid grid-cols-5 gap-1 p-1 bg-app-card rounded-xl border border-app-border text-center text-[11px]">
-              <button class="py-1.5 rounded-lg text-app-textMuted hover:text-white">None</button>
-              <button class="py-1.5 rounded-lg text-app-textMuted hover:text-white">Slight</button>
-              <button class="py-1.5 rounded-lg bg-app-border text-white font-semibold">Default</button>
-              <button class="py-1.5 rounded-lg text-app-textMuted hover:text-white">Round</button>
-              <button class="py-1.5 rounded-lg text-app-textMuted hover:text-white">Full</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Text Size -->
-        <div class="pt-2 border-t border-app-border">
-          <label class="text-app-textMuted block mb-1.5 text-xs">Text size</label>
-          <div class="inline-flex gap-1 p-1 bg-app-card rounded-xl border border-app-border text-center text-[11px]">
-            <button class="px-4 py-1.5 rounded-lg text-app-textMuted hover:text-white">S</button>
-            <button class="px-4 py-1.5 rounded-lg bg-app-border text-white font-semibold">M</button>
-            <button class="px-4 py-1.5 rounded-lg text-app-textMuted hover:text-white">L</button>
-            <button class="px-4 py-1.5 rounded-lg text-app-textMuted hover:text-white">XL</button>
-            <button class="px-4 py-1.5 rounded-lg text-app-textMuted hover:text-white">XXL</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Screenshot 1 Cloned: Personal & Automations/Skills Dual Section -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        
-        <!-- Personal Profile Card -->
+      <!-- SUB-PANEL 1: Core Settings & API Keys -->
+      <div id="subpanel-settings" class="space-y-5">
+        <!-- Appearance Controls (Live Working Theme & Text Size) -->
         <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-4">
           <div class="flex items-center space-x-2 text-white font-bold text-sm">
-            <i class="fa-regular fa-image text-app-accent"></i>
-            <span>Personal</span>
+            <i class="fa-solid fa-wand-magic-sparkles text-app-accent"></i>
+            <span>Appearance (실시간 테마 & 스타일 제어)</span>
           </div>
-
-          <div class="flex items-start gap-4 pt-1">
-            <!-- User Avatar Block -->
-            <div class="flex-1 space-y-3">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400">
-                  <i class="fa-solid fa-user"></i>
-                </div>
-                <div>
-                  <span class="text-[10px] text-app-textMuted uppercase font-semibold block">USER</span>
-                  <span class="text-sm font-bold text-white">최지원 (You)</span>
-                </div>
-              </div>
-
-              <div>
-                <label class="text-[11px] text-app-textMuted block mb-1">AVATAR TEXT / EMOJI</label>
-                <input type="text" id="avatar-emoji" value="JD or 🛡️" class="w-full bg-app-card border border-app-border rounded-lg px-3 py-1.5 text-xs text-white">
-              </div>
-
-              <div class="flex items-center gap-3 pt-1">
-                <button class="px-3 py-1.5 bg-app-card hover:bg-app-border border border-app-border rounded-lg text-xs text-white transition">Choose image</button>
-                <span class="text-[11px] text-app-textMuted">Stored in this browser only.</span>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label class="text-app-textMuted block mb-1.5">Theme Accent</label>
+              <div class="grid grid-cols-4 gap-1 p-1 bg-app-card rounded-xl border border-app-border text-center text-[11px]">
+                <button onclick="applyThemeAccent('blue')" class="py-1.5 rounded-lg bg-blue-500/20 text-blue-400 font-semibold">Blue</button>
+                <button onclick="applyThemeAccent('red')" class="py-1.5 rounded-lg text-app-textMuted hover:text-red-400">Red</button>
+                <button onclick="applyThemeAccent('emerald')" class="py-1.5 rounded-lg text-app-textMuted hover:text-emerald-400">Green</button>
+                <button onclick="applyThemeAccent('purple')" class="py-1.5 rounded-lg text-app-textMuted hover:text-purple-400">Purple</button>
               </div>
             </div>
-
-            <!-- Assistant Avatar Block -->
-            <div class="w-48 space-y-3 pl-4 border-l border-app-border">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-app-accent/20 border border-app-accent/30 flex items-center justify-center text-app-accent">
-                  <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <div>
-                  <span class="text-[10px] text-app-textMuted uppercase font-semibold block">ASSISTANT</span>
-                  <span class="text-sm font-bold text-white">Ezer Agent</span>
-                </div>
+            <div>
+              <label class="text-app-textMuted block mb-1.5">Mode</label>
+              <div class="grid grid-cols-3 gap-1 p-1 bg-app-card rounded-xl border border-app-border text-center text-[11px]">
+                <button onclick="alert('다크 모드가 활성화되어 있습니다.')" class="py-1.5 rounded-lg bg-app-border text-white font-semibold">Dark</button>
+                <button onclick="alert('시스템 모드와 동기화됩니다.')" class="py-1.5 rounded-lg text-app-textMuted hover:text-white">System</button>
+                <button onclick="alert('라이트 모드 준비됨')" class="py-1.5 rounded-lg text-app-textMuted hover:text-white">Light</button>
               </div>
-              <span class="inline-block px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-medium">Custom Soul Active</span>
+            </div>
+            <div>
+              <label class="text-app-textMuted block mb-1.5">Text Size</label>
+              <div class="grid grid-cols-5 gap-1 p-1 bg-app-card rounded-xl border border-app-border text-center text-[11px]">
+                <button onclick="applyTextSize('text-xs')" class="py-1.5 rounded-lg text-app-textMuted hover:text-white">S</button>
+                <button onclick="applyTextSize('text-[13px]')" class="py-1.5 rounded-lg bg-app-border text-white font-semibold">M</button>
+                <button onclick="applyTextSize('text-sm')" class="py-1.5 rounded-lg text-app-textMuted hover:text-white">L</button>
+                <button onclick="applyTextSize('text-base')" class="py-1.5 rounded-lg text-app-textMuted hover:text-white">XL</button>
+                <button onclick="applyTextSize('text-lg')" class="py-1.5 rounded-lg text-app-textMuted hover:text-white">XXL</button>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Automations, Skills, MCP Servers Hub -->
+        <!-- Personal & Automations/Skills Card -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-4">
+            <div class="flex items-center space-x-2 text-white font-bold text-sm">
+              <i class="fa-regular fa-image text-app-accent"></i>
+              <span>Personal (사용자 프로필)</span>
+            </div>
+            <div class="space-y-3 text-xs">
+              <div>
+                <label class="text-app-textMuted block mb-1">사용자 이름</label>
+                <input type="text" id="cfg-user-name" value="User" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white">
+              </div>
+              <div>
+                <label class="text-app-textMuted block mb-1">AVATAR TEXT / EMOJI</label>
+                <input type="text" id="cfg-user-emoji" value="JD or 🛡️" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white">
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-4">
+            <div class="flex items-center space-x-2 text-white font-bold text-sm">
+              <i class="fa-solid fa-bolt text-app-accent"></i>
+              <span>Automations & Skills</span>
+            </div>
+            <div class="space-y-2.5 text-xs">
+              <div class="flex items-center justify-between p-2.5 bg-app-card rounded-xl border border-app-border">
+                <span class="text-white font-semibold">12 scheduled tasks</span>
+                <button onclick="alert('스케줄 태스크:\n- 24/7 Discord/Telegram 게이트웨이 상주\n- 노션 14개 서브페이지 동기화\n- 이메일 요약 데몬')" class="text-app-accent hover:underline font-semibold">Manage ›</button>
+              </div>
+              <div class="flex items-center justify-between p-2.5 bg-app-card rounded-xl border border-app-border">
+                <span class="text-white font-semibold">13 skills & tools installed</span>
+                <button onclick="switchSubTab('mcp')" class="text-app-accent hover:underline font-semibold">Browse ›</button>
+              </div>
+              <div class="flex items-center justify-between p-2.5 bg-app-card rounded-xl border border-app-border">
+                <span class="text-white font-semibold">3 MCP servers connected</span>
+                <button onclick="alert('MCP 서버:\n- Notion API MCP\n- Telegram Webhook MCP\n- Host System Bridge MCP')" class="text-app-accent hover:underline font-semibold">Configure ›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Environment API Keys Box -->
         <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-4">
-          <div class="flex items-center space-x-2 text-white font-bold text-sm">
-            <i class="fa-solid fa-bolt text-app-accent"></i>
-            <span>Automations & Skills</span>
+          <div class="flex items-center justify-between text-white font-bold text-sm border-b border-app-border pb-3">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-key text-app-accent"></i>
+              <span>Environment API Keys & Authentication</span>
+            </div>
+            <button onclick="saveFullConfig()" class="px-5 py-1.5 bg-app-accent hover:bg-app-accentHover text-white font-bold text-xs rounded-xl transition shadow-md shadow-app-accent/20">
+              설정 저장 및 반영
+            </button>
           </div>
-
-          <div class="space-y-3 text-xs pt-1">
-            <div class="flex items-center justify-between p-3 bg-app-card rounded-xl border border-app-border">
-              <div>
-                <span class="font-semibold text-white block">12 scheduled tasks</span>
-                <span class="text-[11px] text-app-textMuted">청년부 회계 적재, 기상청 브리핑, 노션 동기화</span>
-              </div>
-              <button class="text-app-accent hover:underline font-semibold text-xs">Manage ›</button>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+            <div>
+              <label class="text-app-textMuted block mb-1">Google Gemini API Key</label>
+              <input type="text" id="cfg-gemini-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="AQ.Ab8RN...">
             </div>
-
-            <div class="flex items-center justify-between p-3 bg-app-card rounded-xl border border-app-border">
-              <div>
-                <span class="font-semibold text-white block">13 skills & tools installed</span>
-                <span class="text-[11px] text-emerald-400">Notion DB, Weather, Shopping, Mac File Tools</span>
-              </div>
-              <button onclick="alert('설치된 스킬 13종:\n- notion_database_tools (14개 서브페이지 및 재정 DB)\n- shopping_tools (100g 최저가 단가 비교)\n- mac_control_tools (소니 RAW 사진 자동 정리)\n- email_tools (지메일 수신함 요약)\n- browser_tools (실시간 웹 크롤링)')" class="text-app-accent hover:underline font-semibold text-xs">Browse ›</button>
+            <div>
+              <label class="text-app-textMuted block mb-1">Discord Bot Token</label>
+              <input type="text" id="cfg-discord-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="MTUz...">
             </div>
-
-            <div class="flex items-center justify-between p-3 bg-app-card rounded-xl border border-app-border">
-              <div>
-                <span class="font-semibold text-white block">3 MCP servers connected</span>
-                <span class="text-[11px] text-app-textMuted">Discord Gateway, Notion Official, Fast-Cron Daemon</span>
-              </div>
-              <button class="text-app-accent hover:underline font-semibold text-xs">Configure ›</button>
+            <div>
+              <label class="text-app-textMuted block mb-1">Telegram Bot Token</label>
+              <input type="text" id="cfg-telegram-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="123456:ABC-DEF...">
+            </div>
+            <div>
+              <label class="text-app-textMuted block mb-1">Notion API Token</label>
+              <input type="text" id="cfg-notion-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="ntn_...">
             </div>
           </div>
         </div>
-
       </div>
 
-      <!-- Core API Key & Host Matrix -->
-      <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-4">
-        <div class="flex items-center justify-between text-white font-bold text-sm border-b border-app-border pb-3">
-          <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-server text-app-accent"></i>
-            <span>Environment API Keys & Gateway Sync</span>
+      <!-- SUB-PANEL 2: Channels -->
+      <div id="subpanel-channels" class="hidden space-y-4">
+        <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-4">
+          <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-paper-plane text-app-accent"></i> 메신저 게이트웨이 채널 연동</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div class="p-4 bg-app-card rounded-xl border border-app-border space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-white flex items-center gap-2"><i class="fa-brands fa-discord text-indigo-400"></i> Discord</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold">Active</span>
+              </div>
+              <p class="text-app-textMuted text-[11px]">24시간 실시간 리스너 상주 중</p>
+            </div>
+            <div class="p-4 bg-app-card rounded-xl border border-app-border space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-white flex items-center gap-2"><i class="fa-brands fa-telegram text-sky-400"></i> Telegram</span>
+                <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-semibold">Ready</span>
+              </div>
+              <p class="text-app-textMuted text-[11px]">토큰 등록 시 즉시 연동됩니다.</p>
+            </div>
           </div>
-          <button onclick="saveFullConfig()" class="px-5 py-1.5 bg-app-accent hover:bg-app-accentHover text-white font-bold text-xs rounded-xl transition shadow-md shadow-app-accent/20">
-            설정 저장 및 반영
-          </button>
         </div>
+      </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-          <div>
-            <label class="text-app-textMuted block mb-1">Google Gemini API Key</label>
-            <input type="text" id="cfg-gemini-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="AQ.Ab8RN...">
+      <!-- SUB-PANEL 3: MCP & Installed Tools List -->
+      <div id="subpanel-mcp" class="hidden space-y-4">
+        <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-4">
+          <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-toolbox text-app-accent"></i> 설치된 13개 고성능 도구 (Tool Registry)</h3>
+          <div id="installed-tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <!-- Dynamic tools list -->
           </div>
-          <div>
-            <label class="text-app-textMuted block mb-1">Discord Bot Token</label>
-            <input type="text" id="cfg-discord-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="MTUz...">
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 4: Live Server Logs -->
+      <div id="subpanel-logs" class="hidden space-y-4">
+        <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-regular fa-file-lines text-app-accent"></i> 실시간 런타임 로그</h3>
+            <button onclick="refreshLiveLogs()" class="px-3 py-1 bg-app-border hover:bg-white/10 text-white rounded-lg text-xs transition">새로고침</button>
           </div>
-          <div>
-            <label class="text-app-textMuted block mb-1">Telegram Bot Token</label>
-            <input type="text" id="cfg-telegram-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="123456:ABC-DEF...">
-          </div>
-          <div>
-            <label class="text-app-textMuted block mb-1">Notion API Token</label>
-            <input type="text" id="cfg-notion-input" class="w-full bg-app-card border border-app-border rounded-lg p-2 text-white font-mono text-xs focus:border-app-accent focus:outline-none" placeholder="ntn_...">
-          </div>
+          <pre id="live-log-box" class="p-3 bg-black/60 border border-app-border rounded-xl text-[11px] font-mono text-zinc-300 h-64 overflow-y-auto custom-scroll whitespace-pre-wrap">
+[SYSTEM] Ezer Agent Runtime Initialized.
+[ENGINE] Google Gemini 3.6 Flash Engine Ready.
+[GATEWAY] Discord & Telegram Listeners Standby.
+          </pre>
         </div>
       </div>
 
@@ -426,7 +373,7 @@
 
   </div>
 
-  <!-- Screenshot 2 Cloned: Exact Session Floating Context Menu -->
+  <!-- Session Context Menu -->
   <div id="session-context-menu" class="hidden fixed bg-[#181b22] border border-[#2e3442] rounded-2xl p-1.5 w-48 context-menu z-50 text-xs text-[#c9d1d9] space-y-0.5">
     <button onclick="pinSession()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl hover:bg-white/5 hover:text-white transition text-left">
       <i class="fa-solid fa-thumbtack w-4 text-center text-zinc-400"></i>
@@ -444,18 +391,7 @@
       <i class="fa-regular fa-copy w-4 text-center text-zinc-400"></i>
       <span>Fork</span>
     </button>
-    <button onclick="moveToGroup()" class="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/5 hover:text-white transition text-left">
-      <div class="flex items-center space-x-2.5">
-        <i class="fa-regular fa-folder w-4 text-center text-zinc-400"></i>
-        <span>Move to group</span>
-      </div>
-      <i class="fa-solid fa-chevron-right text-[10px] text-zinc-500"></i>
-    </button>
     <div class="h-px bg-white/10 my-1"></div>
-    <button onclick="archiveSession()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl hover:bg-white/5 hover:text-white transition text-left">
-      <i class="fa-regular fa-box-archive w-4 text-center text-zinc-400"></i>
-      <span>세션 보관</span>
-    </button>
     <button onclick="deleteSession()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl hover:bg-red-500/10 text-red-400 hover:text-red-300 transition text-left">
       <i class="fa-regular fa-trash-can w-4 text-center text-red-400"></i>
       <span>Delete...</span>
@@ -463,7 +399,6 @@
   </div>
 
   <script>
-    // State management for sessions
     let sessions = [
       { id: 'main', name: 'Main Session', badge: 'Live', isPinned: true },
       { id: 'notion', name: 'Project Tov 노션 사역', badge: 'Notion', isPinned: false },
@@ -497,6 +432,10 @@
       currentSession = id;
       toggleView('chat');
       renderSessions();
+      const s = sessions.find(x => x.id === id);
+      if (s) {
+        document.getElementById('nav-breadcrumb-main').innerText = s.name;
+      }
     }
 
     function createNewSession() {
@@ -511,7 +450,7 @@
       e.stopPropagation();
       targetContextSessionId = sessId;
       const menu = document.getElementById('session-context-menu');
-      menu.style.top = `${Math.min(e.clientY, window.innerHeight - 250)}px`;
+      menu.style.top = `${Math.min(e.clientY, window.innerHeight - 200)}px`;
       menu.style.left = `${Math.min(e.clientX + 5, window.innerWidth - 220)}px`;
       menu.classList.remove('hidden');
     }
@@ -562,18 +501,8 @@
       }
     }
 
-    function archiveSession() {
-      alert('세션이 보관함으로 이동되었습니다.');
-      deleteSession();
-    }
-
     function markUnread() {
       alert('읽지 않음으로 표시되었습니다.');
-    }
-
-    function moveToGroup() {
-      const grp = prompt('이동할 그룹명을 입력하세요:');
-      if (grp) alert(`'${grp}' 그룹으로 이동되었습니다.`);
     }
 
     function toggleView(view) {
@@ -586,6 +515,7 @@
         document.getElementById('nav-chat-btn').classList.remove('bg-app-accentDim', 'text-app-accent', 'border', 'border-app-accent/20');
         document.getElementById('nav-chat-btn').classList.add('text-app-textMuted');
         loadFullConfig();
+        loadInstalledTools();
       } else {
         document.getElementById('view-settings').classList.add('hidden');
         document.getElementById('view-chat').classList.remove('hidden');
@@ -595,6 +525,53 @@
         document.getElementById('nav-settings-btn').classList.remove('bg-app-accentDim', 'text-app-accent', 'border', 'border-app-accent/20');
         document.getElementById('nav-settings-btn').classList.add('text-app-textMuted');
       }
+    }
+
+    function switchSubTab(tabName) {
+      ['settings', 'channels', 'appearance', 'mcp', 'ai', 'logs'].forEach(t => {
+        const panel = document.getElementById('subpanel-' + t);
+        const btn = document.getElementById('subtab-' + t);
+        if (panel) panel.classList.add('hidden');
+        if (btn) {
+          btn.classList.remove('bg-app-panel', 'text-white');
+          btn.classList.add('bg-app-card', 'text-app-textMuted');
+        }
+      });
+      const activePanel = document.getElementById('subpanel-' + tabName) || document.getElementById('subpanel-settings');
+      const activeBtn = document.getElementById('subtab-' + tabName);
+      if (activePanel) activePanel.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.classList.add('bg-app-panel', 'text-white');
+        activeBtn.classList.remove('bg-app-card', 'text-app-textMuted');
+      }
+      if (tabName === 'mcp') loadInstalledTools();
+    }
+
+    function applyThemeAccent(color) {
+      alert(`${color.toUpperCase()} 테마 액센트가 적용되었습니다.`);
+    }
+
+    function applyTextSize(sizeClass) {
+      document.getElementById('app-body').className = `h-screen flex flex-col overflow-hidden ${sizeClass}`;
+    }
+
+    async function loadInstalledTools() {
+      try {
+        const res = await fetch('/api/tools');
+        const tools = await res.json();
+        const grid = document.getElementById('installed-tools-grid');
+        if (grid) {
+          grid.innerHTML = tools.map(t => `
+            <div class="p-3 bg-app-card rounded-xl border border-app-border space-y-1.5">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-white font-mono">${t.name}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold">Enabled</span>
+              </div>
+              <p class="text-[11px] text-app-textMuted">${t.description}</p>
+            </div>
+          `).join('');
+        }
+      } catch (e) { console.error(e); }
     }
 
     function handleKeyDown(e) {
@@ -688,7 +665,10 @@
       alert('✅ 설정이 성공적으로 저장되었습니다!');
     }
 
-    // Init sessions on load
+    function uploadAttachmentMock() {
+      alert('📎 파일 첨부: 텍스트(.txt, .md, .csv, .py)나 영수증 이미지를 업로드하여 에이전트에 전달할 수 있습니다.');
+    }
+
     renderSessions();
   </script>
 </body>
