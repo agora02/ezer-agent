@@ -140,6 +140,57 @@ DEFAULT_CORE_TOOLS = [
             "type": "object",
             "properties": {}
         }
+    },
+    # OpenAccountant Financial & Accounting Core Tools
+    {
+        "name": "record_transaction",
+        "description": "[회계] 수입(매출) 또는 지출(비용) 내역을 장부에 새로 기록합니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "date": {"type": "string", "description": "거래 일자 (YYYY-MM-DD 또는 '오늘')"},
+                "description": {"type": "string", "description": "거래 내용 (예: 'AWS 서버비', '외주 용역비')"},
+                "amount": {"type": "number", "description": "금액 (숫자)"},
+                "category": {"type": "string", "description": "카테고리 (예: '서버비', '인건비', '식대', '매출')"},
+                "t_type": {"type": "string", "enum": ["income", "expense"], "description": "'income'(수입/매출) 또는 'expense'(지출/비용)"},
+                "account": {"type": "string", "description": "계좌/카드명 (기본값: '주계좌')", "default": "주계좌"}
+            },
+            "required": ["description", "amount", "category", "t_type"]
+        }
+    },
+    {
+        "name": "generate_profit_and_loss",
+        "description": "[회계] 지정된 기간의 손익계산서(P&L / Income Statement), 총매출, 총비용, 순이익 및 마진율을 산출합니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "start_date": {"type": "string", "description": "시작 일자 (YYYY-MM-DD, 옵션)"},
+                "end_date": {"type": "string", "description": "종료 일자 (YYYY-MM-DD, 옵션)"}
+            }
+        }
+    },
+    {
+        "name": "calculate_burn_rate_and_runway",
+        "description": "[회계] 현재 현금 잔고를 바탕으로 월평균 소진액(Burn Rate)과 남은 생존 기간(Runway)을 계산합니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "current_cash_balance": {"type": "number", "description": "현재 보유한 총 현금/통장 잔고"}
+            },
+            "required": ["current_cash_balance"]
+        }
+    },
+    {
+        "name": "query_transactions",
+        "description": "[회계] 기록된 수입/지출 내역을 검색하고 최근 거래 목록을 확인합니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "keyword": {"type": "string", "description": "검색할 거래 키워드"},
+                "category": {"type": "string", "description": "특정 카테고리 필터"},
+                "t_type": {"type": "string", "enum": ["income", "expense"], "description": "'income' 또는 'expense'"}
+            }
+        }
     }
 ]
 
@@ -199,6 +250,39 @@ def dispatch_tool_call(tool_name: str, arguments: Dict[str, Any]) -> str:
         elif tool_name == "get_system_status":
             from tools.system_tools import get_system_status
             return get_system_status()
+
+        # OpenAccountant Tool Handlers
+        elif tool_name == "record_transaction":
+            from tools.accounting_tools import record_transaction
+            return record_transaction(
+                date=arguments.get("date", "오늘"),
+                description=arguments.get("description", ""),
+                amount=float(arguments.get("amount", 0)),
+                category=arguments.get("category", "기타"),
+                t_type=arguments.get("t_type", "expense"),
+                account=arguments.get("account", "주계좌")
+            )
+
+        elif tool_name == "generate_profit_and_loss":
+            from tools.accounting_tools import generate_profit_and_loss
+            return generate_profit_and_loss(
+                start_date=arguments.get("start_date"),
+                end_date=arguments.get("end_date")
+            )
+
+        elif tool_name == "calculate_burn_rate_and_runway":
+            from tools.accounting_tools import calculate_burn_rate_and_runway
+            return calculate_burn_rate_and_runway(
+                current_cash_balance=float(arguments.get("current_cash_balance", 0))
+            )
+
+        elif tool_name == "query_transactions":
+            from tools.accounting_tools import query_transactions
+            return query_transactions(
+                keyword=arguments.get("keyword"),
+                category=arguments.get("category"),
+                t_type=arguments.get("t_type")
+            )
 
         elif tool_name == "install_new_skill":
             from core.skill_learner import skill_learner
