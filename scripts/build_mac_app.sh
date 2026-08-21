@@ -1,15 +1,20 @@
 #!/bin/bash
-# Self-Bootstrapping Installer for Ezer Studio Native macOS App
+# Self-Bootstrapping Installer for Ezer Studio Native macOS App with Custom Icon
 
 APP_NAME="Ezer Studio"
 BUILD_DIR="$HOME/Desktop/${APP_NAME}.app"
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "🔨 Building Self-Installing Standalone macOS App (${APP_NAME})..."
+echo "🔨 Building Self-Installing Standalone macOS App (${APP_NAME}) with Custom Icon..."
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR/Contents/MacOS"
 mkdir -p "$BUILD_DIR/Contents/Resources"
+
+# Copy custom ICNS icon into app bundle
+if [ -f "$CURRENT_DIR/assets/app_icon.icns" ]; then
+    cp "$CURRENT_DIR/assets/app_icon.icns" "$BUILD_DIR/Contents/Resources/app_icon.icns"
+fi
 
 # 1. Info.plist
 cat << 'EOF' > "$BUILD_DIR/Contents/Info.plist"
@@ -19,6 +24,8 @@ cat << 'EOF' > "$BUILD_DIR/Contents/Info.plist"
 <dict>
     <key>CFBundleExecutable</key>
     <string>launch</string>
+    <key>CFBundleIconFile</key>
+    <string>app_icon</string>
     <key>CFBundleIdentifier</key>
     <string>com.ezer.agent.studio</string>
     <key>CFBundleName</key>
@@ -35,14 +42,14 @@ cat << 'EOF' > "$BUILD_DIR/Contents/Info.plist"
 </plist>
 EOF
 
-# 2. Executable launcher script (Auto setup venv & dependencies on first run)
+# 2. Executable launcher script
 cat << EOF > "$BUILD_DIR/Contents/MacOS/launch"
 #!/bin/bash
 TARGET_DIR="${CURRENT_DIR}"
 
 cd "\$TARGET_DIR"
 
-# Auto setup venv & install dependencies if not installed
+# Auto setup venv & install dependencies on first run
 if [ ! -d "\$TARGET_DIR/venv" ]; then
     python3 -m venv "\$TARGET_DIR/venv"
     source "\$TARGET_DIR/venv/bin/activate"
@@ -70,5 +77,6 @@ fi
 EOF
 
 chmod +x "$BUILD_DIR/Contents/MacOS/launch"
+touch "$BUILD_DIR"
 
-echo "✅ [Ezer Studio.app] self-installing macOS package built on Desktop!"
+echo "✅ [Ezer Studio.app] with Custom Cloud Robot Icon successfully created on Desktop!"
