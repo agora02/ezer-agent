@@ -7,16 +7,15 @@ DATA_DIR.mkdir(exist_ok=True)
 LONG_TERM_MEMORY_FILE = DATA_DIR / "long_term_memory.json"
 
 DEFAULT_LONG_TERM_MEMORY = {
-    "user_name": "최지원",
-    "primary_church_app": "lign-app (/Users/jeewonchoi/Documents/antigravity/lign-app)",
+    "user_name": "User",
+    "primary_project": "Default Project",
     "preferences": {
         "language": "Korean (한국어)",
         "tone": "Warm, smart, capable, concise",
         "file_safety": "Move to Trash (~/.Trash) instead of permanent deletion"
     },
     "custom_facts": [
-        "이룸교회 청년부 웹/앱 프로젝트(lign-app)를 주로 개발하고 있음.",
-        "카메라 소니 RAW 파일 확장자는 .ARW 이며, JPG는 보존 대상임."
+        "자율 AI 에이전트 Ezer Agent가 시스템을 관리함."
     ]
 }
 
@@ -66,8 +65,8 @@ class MemoryManager:
         facts = self.long_term_memory.get("custom_facts", [])
         facts_text = "\n".join([f"- {f}" for f in facts])
         return f"""### Persistent User & Project Memory:
-- User Name: {self.long_term_memory.get('user_name', '최지원')}
-- Primary Project: {self.long_term_memory.get('primary_church_app')}
+- User Name: {self.long_term_memory.get('user_name', 'User')}
+- Primary Project: {self.long_term_memory.get('primary_project', 'Default Project')}
 - Memory Facts:
 {facts_text}
 """

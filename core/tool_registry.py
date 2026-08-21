@@ -140,7 +140,7 @@ TOOLS_SCHEMA = [
     },
     {
         "name": "execute_dev_task",
-        "description": "맥북 로컬 프로젝트(lign-app 등)의 소스코드를 원격으로 수정, 빌드 검증 및 Vercel/GitHub에 자동 배포합니다.",
+        "description": "프로젝트의 소스코드를 원격으로 수정, 빌드 검증 및 Vercel/GitHub에 자동 배포합니다.",
         "parameters": {
             "type": "object",
             "properties": {

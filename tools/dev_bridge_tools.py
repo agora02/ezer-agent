@@ -4,22 +4,19 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Any, List
 
-WORKSPACE_ROOT = Path("/Users/jeewonchoi/Documents/antigravity")
+WORKSPACE_ROOT = Path(os.getenv("WORKSPACE_ROOT", str(Path.home() / "Documents" / "antigravity")))
 
 def execute_remote_dev_task(prompt: str) -> str:
-    """[Antigravity Autonomous Remote Dev Bridge]
-    Directly executes code modifications in lign-app, runs build test, and deploys to Vercel from Discord.
+    """[Autonomous Remote Dev Bridge]
+    Directly executes code modifications, runs build test, and deploys from Discord/Web.
     """
     clean_prompt = prompt.replace("!dev", "").replace("!agy", "").strip()
 
-    # 1. Target Project (Always lign-app unless specified)
-    target_project = "lign-app"
-    if "쇼츠" in clean_prompt or "shorts" in clean_prompt or "meitner" in clean_prompt:
-        target_project = "mysterious-meitner"
-
+    # 1. Target Project (Dynamic extraction or environment default)
+    target_project = os.getenv("DEFAULT_DEV_PROJECT", "project")
     project_dir = WORKSPACE_ROOT / target_project
     if not project_dir.exists():
-        return f"[ERROR] 대상 프로젝트를 찾을 수 없습니다: {project_dir}"
+        project_dir = Path.cwd()
 
     report_lines = [
         f"🛠️ **[Antigravity 자율 원격 개발 파이프라인 가동]**",
