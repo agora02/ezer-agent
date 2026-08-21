@@ -18,11 +18,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all application code
+# Copy application files
 COPY . .
 
-# Expose port (Cloud Run defaults to 8080)
+# Cloud Run defaults to 8080
 EXPOSE 8080
 
-# Run FastAPI Ezer Agent Gateway Server
-CMD exec uvicorn gateways.web_ui:app --host 0.0.0.0 --port ${PORT}
+# Run FastAPI app with explicit string shell execution
+CMD ["uvicorn", "gateways.web_ui:app", "--host", "0.0.0.0", "--port", "8080"]
