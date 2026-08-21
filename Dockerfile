@@ -2,6 +2,7 @@
 FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
     APP_HOME=/app
 
 WORKDIR $APP_HOME
@@ -19,10 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy all application files
 COPY . .
 
-# Ensure entrypoint is executable
-RUN chmod +x entrypoint.sh
-
-# Expose port
+# Expose port (Cloud Run defaults to 8080)
 EXPOSE 8080
 
-CMD ["./entrypoint.sh"]
+# Start server directly via Python (Bulletproof Cloud Run entrypoint)
+CMD ["python", "server.py"]
