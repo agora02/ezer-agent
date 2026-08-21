@@ -138,20 +138,7 @@ TOOLS_SCHEMA = [
             "required": ["action"]
         }
     },
-    {
-        "name": "execute_dev_task",
-        "description": "프로젝트의 소스코드를 원격으로 수정, 빌드 검증 및 Vercel/GitHub에 자동 배포합니다.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "instruction": {
-                    "type": "string",
-                    "description": "개발 또는 코드 수정 지시사항 (예: '상단 헤더 AI 바 이름을 이룸 AI로 변경해줘')"
-                }
-            },
-            "required": ["instruction"]
-        }
-    },
+
     {
         "name": "compare_product_deals",
         "description": "생필품/식품/전자기기(닭가슴살, 보충제, 음료, 생수 등)의 실시간 가격, 총 중량, 100g/개당 단가(가성비)를 비교 분석하고 추천 순위표를 제공합니다.",
