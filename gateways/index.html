@@ -202,6 +202,7 @@
       <!-- Functional SubTab Navigation Bar -->
       <div class="flex flex-wrap items-center gap-2 pt-1 pb-3 border-b border-app-border text-xs">
         <button onclick="switchSubTab('settings')" id="subtab-settings" class="subtab-btn px-3 py-2 rounded-xl bg-app-panel text-white font-medium flex items-center gap-2 border border-app-border"><i class="fa-solid fa-gear"></i><span>설정</span></button>
+        <button onclick="switchSubTab('changes')" id="subtab-changes" class="subtab-btn px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border"><i class="fa-solid fa-code-compare text-app-accent"></i><span>Changes & SQLite</span></button>
         <button onclick="switchSubTab('channels')" id="subtab-channels" class="subtab-btn px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border"><i class="fa-solid fa-link"></i><span>채널</span></button>
         <button onclick="switchSubTab('appearance')" id="subtab-appearance" class="subtab-btn px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border"><i class="fa-solid fa-wand-magic-sparkles"></i><span>모양</span></button>
         <button onclick="switchSubTab('mcp')" id="subtab-mcp" class="subtab-btn px-3 py-2 rounded-xl bg-app-card text-app-textMuted hover:text-white flex items-center gap-2 border border-app-border"><i class="fa-solid fa-wrench"></i><span>MCP & Tools</span></button>
@@ -358,6 +359,67 @@
         </div>
       </div>
 
+      <!-- SUB-PANEL 5: OpenClaw 2.0 Git Changes & SQLite Storage -->
+      <div id="subpanel-changes" class="hidden space-y-5">
+        <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-4">
+          <div class="flex justify-between items-center border-b border-app-border pb-3">
+            <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-code-compare text-app-accent"></i> Workspace Git Changes (OpenClaw 2.0 Style)</h3>
+            <button onclick="loadGitChanges()" class="px-3 py-1 bg-app-accent/20 hover:bg-app-accent/30 text-app-accent rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+              <i class="fa-solid fa-arrows-rotate"></i> 변경사항 새로고침
+            </button>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+            <div>
+              <span class="text-app-textMuted block mb-2 font-semibold">수정/생성된 파일 목록:</span>
+              <ul id="git-modified-list" class="space-y-1.5 font-mono text-[11px] p-3 bg-app-card rounded-xl border border-app-border min-h-[140px] max-h-56 overflow-y-auto">
+                <li class="text-zinc-500">불러오는 중...</li>
+              </ul>
+            </div>
+            <div>
+              <span class="text-app-textMuted block mb-2 font-semibold">Diff Summary:</span>
+              <pre id="git-diff-stat" class="p-3 bg-black/60 border border-app-border rounded-xl font-mono text-[11px] text-emerald-400 min-h-[140px] max-h-56 overflow-y-auto whitespace-pre-wrap">--</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-3">
+            <div class="flex justify-between items-center border-b border-app-border pb-2">
+              <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-database text-app-accent"></i> SQLite3 Storage Stats</h3>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono">0ms Latency</span>
+            </div>
+            <div id="sqlite-stats-box" class="space-y-2 text-xs text-app-textMuted">
+              <div class="flex justify-between p-2 bg-app-card rounded-lg border border-app-border">
+                <span>데이터베이스 엔진</span>
+                <span class="text-white font-mono font-semibold">SQLite3 Indexed Engine</span>
+              </div>
+              <div class="flex justify-between p-2 bg-app-card rounded-lg border border-app-border">
+                <span>저장된 세션 수</span>
+                <span id="stat-sessions-count" class="text-white font-mono font-semibold">-</span>
+              </div>
+              <div class="flex justify-between p-2 bg-app-card rounded-lg border border-app-border">
+                <span>자율 학습 교훈 (Insights)</span>
+                <span id="stat-insights-count" class="text-white font-mono font-semibold">-</span>
+              </div>
+              <div class="flex justify-between p-2 bg-app-card rounded-lg border border-app-border">
+                <span>회계 장부 기록 건수</span>
+                <span id="stat-txs-count" class="text-white font-mono font-semibold">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-3">
+            <div class="flex justify-between items-center border-b border-app-border pb-2">
+              <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-brain text-app-accent"></i> Hermes 자율 생성 스킬 목록</h3>
+              <button onclick="loadCustomSkills()" class="text-[11px] text-app-accent hover:underline">새로고침</button>
+            </div>
+            <div id="custom-skills-list" class="space-y-2 text-xs max-h-48 overflow-y-auto custom-scroll">
+              <div class="text-zinc-500 text-center py-4">자율 생성된 커스텀 스킬 로딩 중...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- SUB-PANEL 4: Live Server Logs -->
       <div id="subpanel-logs" class="hidden space-y-4">
         <div class="bg-app-panel border border-app-border rounded-2xl p-5 space-y-3">
@@ -368,6 +430,8 @@
           <pre id="live-log-box" class="p-3 bg-black/60 border border-app-border rounded-xl text-[11px] font-mono text-zinc-300 h-64 overflow-y-auto custom-scroll whitespace-pre-wrap">
 [SYSTEM] Ezer Agent Runtime Initialized.
 [ENGINE] Google Gemini 3.6 Flash Engine Ready.
+[STORAGE] SQLite3 Indexed Backend Active.
+[SECURITY] Credential Shielding Active.
 [GATEWAY] Discord & Telegram Listeners Standby.
           </pre>
         </div>
@@ -537,7 +601,7 @@
     }
 
     function switchSubTab(tabName) {
-      ['settings', 'channels', 'appearance', 'mcp', 'ai', 'logs'].forEach(t => {
+      ['settings', 'changes', 'channels', 'appearance', 'mcp', 'ai', 'logs'].forEach(t => {
         const panel = document.getElementById('subpanel-' + t);
         const btn = document.getElementById('subtab-' + t);
         if (panel) panel.classList.add('hidden');
@@ -554,6 +618,75 @@
         activeBtn.classList.remove('bg-app-card', 'text-app-textMuted');
       }
       if (tabName === 'mcp') loadInstalledTools();
+      if (tabName === 'changes') {
+        loadGitChanges();
+        loadCustomSkills();
+        loadSQLiteStats();
+      }
+    }
+
+    async function loadGitChanges() {
+      try {
+        const res = await fetch('/api/git/changes');
+        const data = await res.json();
+        const listEl = document.getElementById('git-modified-list');
+        const diffEl = document.getElementById('git-diff-stat');
+        if (listEl) {
+          if (data.modified_files && data.modified_files.length > 0) {
+            listEl.innerHTML = data.modified_files.map(f => `<li class="text-amber-400">📝 ${f}</li>`).join('');
+          } else {
+            listEl.innerHTML = `<li class="text-emerald-400">✨ 깔끔한 상태 (변경사항 없음 / All committed)</li>`;
+          }
+        }
+        if (diffEl) {
+          diffEl.innerText = data.diff_summary || 'No uncommitted changes';
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    async function loadCustomSkills() {
+      try {
+        const res = await fetch('/api/skills/custom');
+        const data = await res.json();
+        const container = document.getElementById('custom-skills-list');
+        if (container) {
+          if (data.custom_skills && data.custom_skills.length > 0) {
+            container.innerHTML = data.custom_skills.map(s => `
+              <div class="p-2 bg-app-card rounded-lg border border-app-border">
+                <div class="flex justify-between items-center text-xs font-semibold text-white">
+                  <span>⚡ ${s.name}</span>
+                  <span class="text-[10px] text-emerald-400">Active</span>
+                </div>
+                <pre class="mt-1 p-1 bg-black/40 rounded text-[10px] font-mono text-zinc-400 overflow-x-auto">${s.code}</pre>
+              </div>
+            `).join('');
+          } else {
+            container.innerHTML = `<div class="text-zinc-500 text-center py-4">아직 자율 생성된 커스텀 스킬이 없습니다.<br>(에이전트가 필요 시 자동으로 생성합니다)</div>`;
+          }
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    async function loadSQLiteStats() {
+      try {
+        const res = await fetch('/api/store/stats');
+        const data = await res.json();
+        if (document.getElementById('stat-sessions-count')) {
+          document.getElementById('stat-sessions-count').innerText = `${data.active_sessions_count}개 세션`;
+        }
+        if (document.getElementById('stat-insights-count')) {
+          document.getElementById('stat-insights-count').innerText = `${data.total_insights_learned}개 인사이트`;
+        }
+        if (document.getElementById('stat-txs-count')) {
+          document.getElementById('stat-txs-count').innerText = `${data.total_accounting_records}건`;
+        }
+      } catch(e) {
+        console.error(e);
+      }
     }
 
     function applyThemeAccent(color) {

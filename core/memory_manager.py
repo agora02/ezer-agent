@@ -1,6 +1,8 @@
 import json
+import re
 from pathlib import Path
 from typing import Dict, Any, List
+from core.sqlite_store import db_store
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
@@ -19,12 +21,23 @@ DEFAULT_LONG_TERM_MEMORY = {
     ]
 }
 
+def mask_sensitive_credentials(text: str) -> str:
+    """OpenClaw 2.0 Credential Shielding: Masks API keys, tokens, and secrets from prompt & logging."""
+    if not isinstance(text, str):
+        return text
+    # Mask OpenAI / Gemini / Discord / Notion keys
+    text = re.sub(r'(AIzaSy[A-Za-z0-9_-]{33})', r'AIzaSy***[MASKED]***', text)
+    text = re.sub(r'(secret_[A-Za-z0-9]{32,})', r'secret_***[MASKED]***', text)
+    text = re.sub(r'(ghp_[A-Za-z0-9]{36})', r'ghp_***[MASKED]***', text)
+    text = re.sub(r'([A-Za-z0-9_-]{24}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,})', r'***[DISCORD_TOKEN_MASKED]***', text)
+    return text
+
 class MemoryManager:
-    """Manages short-term conversation context per channel and persistent long-term knowledge."""
+    """Manages SQLite-backed fast sliding context and persistent long-term knowledge."""
 
     def __init__(self, max_history_turns: int = 8):
         self.max_history_turns = max_history_turns
-        self.short_term_sessions: Dict[str, List[Dict[str, str]]] = {}
+        self.db = db_store
         self.long_term_memory = self._load_long_term_memory()
 
     def _load_long_term_memory(self) -> Dict[str, Any]:
@@ -43,30 +56,30 @@ class MemoryManager:
             print(f"[MemoryManager] Failed to save long-term memory: {e}")
 
     def add_fact(self, fact: str):
-        if fact not in self.long_term_memory.get("custom_facts", []):
-            self.long_term_memory.setdefault("custom_facts", []).append(fact)
+        fact_clean = mask_sensitive_credentials(fact)
+        if fact_clean not in self.long_term_memory.get("custom_facts", []):
+            self.long_term_memory.setdefault("custom_facts", []).append(fact_clean)
             self._save_long_term_memory(self.long_term_memory)
+        # Also persist to SQLite
+        self.db.add_insight(fact_clean, category="user_preference")
 
     def add_turn(self, session_id: str, role: str, content: str):
-        if session_id not in self.short_term_sessions:
-            self.short_term_sessions[session_id] = []
-        
-        self.short_term_sessions[session_id].append({"role": role, "content": content})
-        
-        # Keep within max sliding window
-        if len(self.short_term_sessions[session_id]) > self.max_history_turns * 2:
-            self.short_term_sessions[session_id] = self.short_term_sessions[session_id][-self.max_history_turns * 2:]
+        content_clean = mask_sensitive_credentials(content)
+        self.db.add_message(session_id, role, content_clean)
 
     def get_history(self, session_id: str) -> List[Dict[str, str]]:
-        return self.short_term_sessions.get(session_id, [])
+        return self.db.get_messages(session_id, limit=self.max_history_turns * 2)
 
     def get_memory_context_prompt(self) -> str:
         """Formats long-term memory facts for injection into system prompt."""
         facts = self.long_term_memory.get("custom_facts", [])
-        facts_text = "\n".join([f"- {f}" for f in facts])
+        sqlite_insights = self.db.get_insights(limit=10)
+        
+        all_unique_facts = list(dict.fromkeys(facts + sqlite_insights))
+        facts_text = "\n".join([f"- {f}" for f in all_unique_facts])
         return f"""### Persistent User & Project Memory:
 - User Name: {self.long_term_memory.get('user_name', 'User')}
 - Primary Project: {self.long_term_memory.get('primary_project', 'Default Project')}
-- Memory Facts:
+- Memory Facts & Self-Learned Insights:
 {facts_text}
 """

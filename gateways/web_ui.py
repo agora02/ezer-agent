@@ -128,6 +128,47 @@ def test_chat(req: TestChatRequest):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.get("/api/git/changes")
+def get_git_changes():
+    """OpenClaw 2.0 Git-backed Changes Panel API."""
+    import subprocess
+    try:
+        status_out = subprocess.check_output(["git", "status", "--short"], cwd=str(BASE_DIR), text=True, timeout=5)
+        diff_stat = subprocess.check_output(["git", "diff", "--stat"], cwd=str(BASE_DIR), text=True, timeout=5)
+        files = [line.strip() for line in status_out.splitlines() if line.strip()]
+        return {"status": "ok", "modified_files": files, "diff_summary": diff_stat}
+    except Exception as e:
+        return {"status": "error", "modified_files": [], "diff_summary": str(e)}
+
+@app.get("/api/skills/custom")
+def get_custom_skills():
+    """List auto-learned Python skills in tools/custom_skills/."""
+    skills_dir = BASE_DIR / "tools" / "custom_skills"
+    results = []
+    if skills_dir.exists():
+        for p in skills_dir.glob("*.py"):
+            results.append({
+                "name": p.stem,
+                "file": p.name,
+                "code": p.read_text(encoding="utf-8", errors="ignore")[:1000]
+            })
+    return {"custom_skills": results}
+
+@app.get("/api/store/stats")
+def get_store_stats():
+    """SQLite Storage and Performance metrics (OpenClaw 2.0 inspired)."""
+    from core.sqlite_store import db_store
+    sessions = db_store.list_sessions()
+    insights = db_store.get_insights(limit=50)
+    txs = db_store.get_transactions(limit=100)
+    return {
+        "engine": "SQLite3 High-Speed Indexed Store",
+        "active_sessions_count": len(sessions),
+        "total_insights_learned": len(insights),
+        "total_accounting_records": len(txs),
+        "sessions": sessions
+    }
+
 @app.get("/", response_class=HTMLResponse)
 def index_page():
     html_file = Path(__file__).resolve().parent / "index.html"
