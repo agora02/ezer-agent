@@ -86,9 +86,12 @@ class GeminiAEAgent:
     def _call_gemini_api(self, prompt: str) -> str:
         """Calls Gemini API with the most cost-effective and high-intelligence models."""
         models_to_try = [
-            "gemini-2.5-flash",       # 최신 고성능 모델
-            "gemini-2.0-flash",       # 고속 프로덕션 모델
-            "gemini-1.5-flash"        # 백업
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-latest",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash-8b",
+            "gemini-1.5-pro",
+            "gemini-1.5-pro-latest"
         ]
 
         last_error = None
@@ -113,7 +116,7 @@ class GeminiAEAgent:
             except Exception as e:
                 last_error = str(e)
 
-        raise RuntimeError(f"All Gemini models failed. Last: {last_error}")
+        raise RuntimeError(f"All Gemini models failed. Last error: {last_error}\n👉 Google AI Studio (https://aistudio.google.com/app/apikey)에서 발급받은 'AIzaSy...' 형식의 Gemini API 키가 올바르게 설정되었는지 확인해주세요.")
 
     def chat(self, user_prompt: str, session_id: str = "discord_default") -> str:
         """Executes full ReAct loop with Gemini."""
