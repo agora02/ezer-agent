@@ -228,6 +228,29 @@ DEFAULT_CORE_TOOLS = [
                 "t_type": {"type": "string", "enum": ["income", "expense"], "description": "'income' 또는 'expense'"}
             }
         }
+    },
+    # Task Observer Meta-Skill Tools (rebelytics/one-skill-to-rule-them-all Pattern B)
+    {
+        "name": "observe_user_pattern",
+        "description": "[Task Observer] 사용자의 업무 피드백, 서식 교정 요청, 선호도 또는 반복 작업을 백그라운드 관찰 일지에 기록합니다. 3회 이상 누적 시 자율 진화 제안이 트리거됩니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "pattern_key": {"type": "string", "description": "고유 식별 키 (예: 'notion_table_format', 'auto_cogs_tagging')"},
+                "category": {"type": "string", "enum": ["correction", "new_skill_candidate", "preference"], "description": "분류"},
+                "summary": {"type": "string", "description": "관찰된 패턴 요약 (예: '노션 작성 시 글머리 기호 대신 마크다운 표 선호')"},
+                "suggested_action": {"type": "string", "description": "스킬 개선 또는 신규 스킬 생성 방안"}
+            },
+            "required": ["pattern_key", "category", "summary", "suggested_action"]
+        }
+    },
+    {
+        "name": "get_observer_report",
+        "description": "[Task Observer] 지금까지 관찰된 스킬 개선 후보 및 사용자 피드백 누적 보고서를 조회합니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {}
+        }
     }
 ]
 
@@ -355,6 +378,27 @@ def dispatch_tool_call(tool_name: str, arguments: Dict[str, Any]) -> str:
             session_id = arguments.get("session_id", "default")
             skill_learner.record_learning_experience(session_id, insight)
             return f"✅ 지식/교훈이 장기 기억에 영구 반영되었습니다: {insight}"
+
+        # Task Observer Handlers
+        elif tool_name == "observe_user_pattern":
+            from core.task_observer import task_observer
+            nudge = task_observer.record_observation(
+                pattern_key=arguments.get("pattern_key", ""),
+                category=arguments.get("category", "preference"),
+                summary=arguments.get("summary", ""),
+                suggested_action=arguments.get("suggested_action", "")
+            )
+            return f"OBSERVED: {arguments.get('summary')} (nudge: {bool(nudge)})"
+
+        elif tool_name == "get_observer_report":
+            from core.task_observer import task_observer
+            pending = task_observer.get_pending_suggestions()
+            if not pending:
+                return "ℹ️ 현재 3회 이상 누적된 스킬 개선 제안 사항이 없습니다. (정상 관찰 진행 중)"
+            lines = ["📋 **[Task Observer] 3회 이상 감지된 스킬 개선/신규 제안 목록**:"]
+            for p in pending:
+                lines.append(f"• **[{p['category']}] {p['summary']}** (누적: {p['frequency']}회)\n  - 제안 방안: {p['suggested_action']}")
+            return "\n\n".join(lines)
 
         else:
             custom_skill_file = Path(__file__).resolve().parent.parent / "tools" / "custom_skills" / f"{tool_name}.py"

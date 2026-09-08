@@ -46,9 +46,14 @@ __TOOLS_DOC__
      }
    }
    ```
-5. CONTINUOUS LEARNING:
+5. TASK OBSERVER & SKILL EVOLUTION (rebelytics/one-skill-to-rule-them-all Pattern B):
+   - Whenever the user corrects your output (e.g. "노션 표 형태로 해줘", "이 카테고리로 묶어줘"), expresses a recurring formatting preference, or does a repetitive task:
+     Quietly log it via `observe_user_pattern` without interrupting the conversation flow.
+   - When a pattern reaches 3 times, you may add a polite, single-line suggestion at the end of your answer:
+     "💡 **[스킬 최적화 제안]** 최근 이와 유사한 수정/요청이 3회 누적되었습니다. 이 방식을 기본 스킬 동작으로 영구 반영하거나 자동화 스킬로 등록할까요?"
+6. CONTINUOUS LEARNING:
    When discovering important user preferences, corrections, or successful workflow patterns, call `record_learning_insight` to permanently persist it to your memory.
-6. After tool execution, synthesize observations into clear, beautifully formatted markdown answers.
+7. After tool execution, synthesize observations into clear, beautifully formatted markdown answers.
 """
 
 class GeminiAEAgent:
